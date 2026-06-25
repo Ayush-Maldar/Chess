@@ -1,25 +1,26 @@
 body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f8f8f8;
-  height: 100vh;
   margin: 0;
+  padding: 20px;
+  background: #f8f8f8;
   font-family: 'Segoe UI', sans-serif;
 }
 
 .game-container {
+  max-width: 900px;
+  margin: 0 auto;
   text-align: center;
 }
 
 h1 {
-  margin-bottom: 10vh;
+  margin-bottom: 30px;
 }
 
 .chessboard {
   display: grid;
   grid-template-columns: repeat(8, 60px);
   grid-template-rows: repeat(8, 60px);
+  width: 480px;
+  margin: 0 auto;
   border: 2px solid #333;
 }
 
@@ -47,6 +48,14 @@ h1 {
 }
 
 #status {
-  margin-top: 10px;
+  margin-top: 15px;
   font-weight: bold;
+  font-size: 20px;
+}
+
+.para {
+  max-width: 700px;
+  margin: 20px auto;
+  font-size: 18px;
+  line-height: 1.5;
 }
