@@ -1,87 +1,177 @@
-const board = document.getElementById('chessboard');
-const status = document.getElementById('status');
+const boardElement = document.getElementById("chessboard");
+const statusElement = document.getElementById("status");
 
-const initialBoard = [
-  ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
-  ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', '', '', '', '', ''],
-  ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
-  ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
-];
+const game = new Chess();
 
-let currentPlayer = 'white';
-let selected = null;
+let selectedSquare = null;
+
+const pieceSymbols = {
+wp: "♙",
+wr: "♖",
+wn: "♘",
+wb: "♗",
+wq: "♕",
+wk: "♔",
+
+bp: "♟",
+br: "♜",
+bn: "♞",
+bb: "♝",
+bq: "♛",
+bk: "♚"
+};
 
 function renderBoard() {
-  board.innerHTML = '';
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 8; col++) {
-      const cell = document.createElement('div');
-      cell.classList.add('cell');
-      cell.classList.add((row + col) % 2 === 0 ? 'white-cell' : 'black-cell');
-      cell.dataset.row = row;
-      cell.dataset.col = col;
-      cell.textContent = initialBoard[row][col];
-      cell.addEventListener('click', handleCellClick);
-      board.appendChild(cell);
-    }
+boardElement.innerHTML = "";
+
+const board = game.board();
+
+for (let row = 0; row < 8; row++) {
+for (let col = 0; col < 8; col++) {
+
+
+  const cell = document.createElement("div");
+
+  cell.classList.add("cell");
+  cell.classList.add(
+    (row + col) % 2 === 0
+      ? "white-cell"
+      : "black-cell"
+  );
+
+  const square =
+    "abcdefgh"[col] + (8 - row);
+
+  cell.dataset.square = square;
+
+  const piece = board[row][col];
+
+  if (piece) {
+    cell.textContent =
+      pieceSymbols[
+        piece.color + piece.type
+      ];
   }
 
-  // Highlight the selected cell (after re-render)
-  if (selected) {
-    const index = selected.row * 8 + selected.col;
-    board.children[index].classList.add('selected');
-  }
-}
-
-function handleCellClick(e) {
-  const row = parseInt(e.target.dataset.row);
-  const col = parseInt(e.target.dataset.col);
-  const clickedPiece = initialBoard[row][col];
-
-  // Selecting your own piece
-  if (clickedPiece && isCurrentPlayerPiece(clickedPiece)) {
-    selected = { row, col, piece: clickedPiece };
-    renderBoard();
-    return;
+  if (selectedSquare === square) {
+    cell.classList.add("selected");
   }
 
-  // Moving selected piece to empty cell or capturing opponent
-  if (selected && (selected.row !== row || selected.col !== col)) {
-    const fromPiece = selected.piece;
-    const toPiece = initialBoard[row][col];
+  cell.addEventListener(
+    "click",
+    handleCellClick
+  );
 
-    // Can only move to empty or opponent's piece
-    if (!toPiece || isOpponentPiece(toPiece)) {
-      // Move piece
-      initialBoard[row][col] = fromPiece;
-      initialBoard[selected.row][selected.col] = '';
-
-      // Switch player
-      currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
-      status.textContent = `${capitalize(currentPlayer)}'s turn`;
-
-      selected = null;
-      renderBoard();
-    }
-  }
+  boardElement.appendChild(cell);
 }
 
-function isCurrentPlayerPiece(piece) {
-  const code = piece.charCodeAt(0);
-  return (currentPlayer === 'white' && code >= 9812 && code <= 9817) ||
-         (currentPlayer === 'black' && code >= 9818 && code <= 9823);
+
 }
 
-function isOpponentPiece(piece) {
-  return !isCurrentPlayerPiece(piece) && piece !== '';
+updateStatus();
 }
 
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+function handleCellClick(event) {
+
+const square =
+event.currentTarget.dataset.square;
+
+const piece = game.get(square);
+
+if (!selectedSquare) {
+
+
+if (
+  piece &&
+  piece.color === game.turn()
+) {
+  selectedSquare = square;
+  renderBoard();
+}
+
+return;
+
+
+}
+
+const move = game.move({
+from: selectedSquare,
+to: square,
+promotion: "q"
+});
+
+if (move) {
+
+
+selectedSquare = null;
+
+renderBoard();
+
+if (game.in_checkmate()) {
+  const winner =
+    game.turn() === "w"
+      ? "Black"
+      : "White";
+
+  statusElement.textContent =
+    winner + " wins by checkmate!";
+}
+
+return;
+
+
+}
+
+if (
+piece &&
+piece.color === game.turn()
+) {
+selectedSquare = square;
+} else {
+selectedSquare = null;
+}
+
+renderBoard();
+}
+
+function updateStatus() {
+
+if (game.in_checkmate()) {
+const winner =
+game.turn() === "w"
+? "Black"
+: "White";
+
+
+statusElement.textContent =
+  winner + " wins by checkmate!";
+return;
+
+
+}
+
+if (game.in_stalemate()) {
+statusElement.textContent =
+"Draw by stalemate";
+return;
+}
+
+if (game.in_draw()) {
+statusElement.textContent =
+"Draw";
+return;
+}
+
+let text =
+game.turn() === "w"
+? "White's turn"
+: "Black's turn";
+
+if (game.in_check()) {
+text += " (Check)";
+}
+
+statusElement.textContent = text;
 }
 
 renderBoard();
